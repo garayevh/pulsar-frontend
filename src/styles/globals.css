@@ -4,10 +4,12 @@
 
 @layer base {
   * { @apply border-surface-200; }
-  body { @apply bg-surface-50 text-surface-800 font-sans; }
-  ::selection { @apply bg-brand-100 text-brand-900; }
+  body { @apply bg-surface-900 text-surface-50 font-sans; }
+  ::selection { @apply bg-brand-500 text-white; }
 }
 
 @layer utilities {
   .text-balance { text-wrap: balance; }
 }
+
+

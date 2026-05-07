@@ -10,9 +10,9 @@ interface HeaderProps {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  draft:     'bg-surface-100 text-surface-500',
-  in_review: 'bg-amber-50 text-amber-700',
-  approved:  'bg-green-50 text-green-700',
+  draft:     'bg-surface-800 text-surface-400',
+  in_review: 'bg-amber-950 text-amber-400',
+  approved:  'bg-green-950 text-green-400',
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -31,13 +31,13 @@ export function Header({ title, subtitle, actions }: HeaderProps) {
   const analysisStatus = session?.analysis?.status
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b border-surface-200 bg-white px-6">
+    <header className="flex h-14 shrink-0 items-center justify-between border-b border-surface-800 bg-surface-950 px-6">
       <div>
-        <h1 className="text-[15px] font-medium text-surface-900">
+        <h1 className="text-[15px] font-medium text-surface-50">
           {title ?? stageLabel ?? 'Pulsar'}
         </h1>
         {subtitle && (
-          <p className="text-[12px] text-surface-400">{subtitle}</p>
+          <p className="text-[12px] text-surface-500">{subtitle}</p>
         )}
       </div>
       <div className="flex items-center gap-2">
