@@ -17,12 +17,14 @@ const TYPE_LABELS: Record<string, { label: string; color: string }> = {
 }
 
 export default function GapReviewPage() {
-  const { session, backendSessionId, setStage, setTestCases } = useSessionStore()
+  const { session, backendSessionId, setStage, resumedGapReviews } = useSessionStore()
   const sessionId = backendSessionId ?? ''
   const gaps = (session?.analysis?.gaps ?? []) as any[]
   const router = useRouter()
 
-  const [reviews, setReviews] = useState<Record<string, string>>({})
+  const [reviews, setReviews] = useState<Record<string, string>>(
+    () => Object.fromEntries(Object.entries(resumedGapReviews).map(([k, v]) => [k, v.action]))
+  )
   const [comments, setComments] = useState<Record<string, string>>({})
   const [activeComment, setActiveComment] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState<string | null>(null)
@@ -53,7 +55,19 @@ export default function GapReviewPage() {
   const handleGenerateTCs = async () => {
     setGenerating(true)
     try {
-      // Skip все unreviewed gaps
+      // Сначала проверяем — может TC уже сгенерированы
+      const currentState = await analysisApi.getSession(sessionId)
+      const currentStage = (currentState as any).current_stage
+
+      if (currentStage === 'human_review_2') {
+        const tcs = (currentState as any).manual_test_cases ?? []
+        useSessionStore.getState().setManualTestCases(tcs)
+        setStage('review2')
+        router.push('/test-cases')
+        return
+      }
+
+      // Скипаем только непроревьюированные
       const unreviewed = gaps.filter((g) => !reviews[g.id])
       for (const gap of unreviewed) {
         await analysisApi.reviewGap({
@@ -64,17 +78,15 @@ export default function GapReviewPage() {
         setReviews((r) => ({ ...r, [gap.id]: 'skip' }))
       }
 
-      // Последний gap triggerует TC generation на backend
-      // Polling подхватит human_review_2 и переключит stage
-      // Но нам нужно poll вручную здесь
+      // Ждём генерации
       let attempts = 0
       while (attempts < 60) {
         await new Promise((r) => setTimeout(r, 2000))
         const state = await analysisApi.getSession(sessionId)
         const stage = (state as any).current_stage
         if (stage === 'human_review_2') {
-          const tcs = (state as any).test_cases ?? []
-          setTestCases(tcs)
+          const tcs = (state as any).manual_test_cases ?? []
+          useSessionStore.getState().setManualTestCases(tcs)
           setStage('review2')
           router.push('/test-cases')
           return

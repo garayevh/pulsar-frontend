@@ -1,17 +1,21 @@
 import { api } from './client'
-import type { Gap, TestCase } from '@/types'
+import type { Gap, ManualTestCase, BDDTestCase } from '@/types'
 
 export interface StartAnalysisRequest {
   page_ids: string[]
-  page_title: string
+  analysis_prompt?: string
+  tc_prompt?: string
+  bdd_prompt?: string
 }
 
 export interface SessionState {
   session_id: string
-  stage: 'analyzing' | 'gap_review' | 'tc_generation' | 'tc_review' | 'done' | 'error'
-  progress?: number
-  gaps?: Gap[]
-  test_cases?: TestCase[]
+  current_stage: string
+  gaps?: any[]
+  score?: any
+  summary?: string
+  manual_test_cases?: ManualTestCase[]
+  bdd_test_cases?: BDDTestCase[]
   error?: string
 }
 
@@ -24,17 +28,26 @@ export interface GapReviewRequest {
 
 export const analysisApi = {
   start: (body: StartAnalysisRequest) =>
-    api.post<{ session_id: string }>('/analysis/start', body),
+    api.post<{ session_id: string; current_stage: string }>('/analysis/start', body),
 
   getSession: (sessionId: string) =>
     api.get<SessionState>(`/analysis/${sessionId}`),
 
   reviewGap: (body: GapReviewRequest) =>
-    api.post<void>('/review/gap', body),
+    api.post<any>('/review/gap', body),
 
-  reviewTestCases: (session_id: string, approved: boolean) =>
-    api.post<void>('/review/test-cases', { session_id, approved }),
+  reviewTestCases: (session_id: string, test_cases: ManualTestCase[], approved: boolean) =>
+    api.post<any>('/review/test-cases', { session_id, test_cases, approved }),
+
+  reviewBdd: (session_id: string, test_cases: BDDTestCase[], approved: boolean) =>
+    api.post<any>('/review/bdd', { session_id, test_cases, approved }),
 
   export: (sessionId: string, format: 'bdd' | 'csv' = 'bdd') =>
-    api.get<{ content: string }>(`/export/${sessionId}?format=${format}`),
+    api.get<any>(`/export/${sessionId}?format=${format}`),
+
+  getSessions: () =>
+    api.get<{ sessions: any[] }>('/sessions'),
+
+  deleteSession: (sessionId: string) =>
+    api.delete<any>(`/sessions/${sessionId}`),
 }

@@ -52,27 +52,47 @@ export interface AnalysisResult {
   updatedAt: string
 }
 
-export type TestCaseType = 'positive' | 'negative' | 'edge' | 'risk_based'
+export type TestCaseType = 'positive' | 'negative' | 'edge' | 'risk'
 export type TestCasePriority = 'critical' | 'high' | 'medium' | 'low'
 
-export interface TestCase {
+export interface ManualTestCase {
   id: string
   title: string
   type: TestCaseType
   priority: TestCasePriority
   preconditions: string
   steps: string[]
-  expectedResult: string
-  sourceGapId?: string
-  approved: boolean
+  expected_result: string
+  notes?: string
+  generated_at?: string
+  source_pages?: string[]
+  manually_edited?: boolean
+}
+
+export interface BDDTestCase {
+  id: string
+  title: string
+  type: TestCaseType
+  priority: TestCasePriority
+  given: string
+  when: string
+  then: string
+  notes?: string
+  generated_at?: string
+  source_pages?: string[]
+  manually_edited?: boolean
 }
 
 export type ExportTarget = 'csv' | 'excel' | 'jira' | 'testrail' | 'qmetry'
 
-export interface ExportConfig {
-  target: ExportTarget
-  testCaseIds: string[]
-  projectKey?: string
+export interface ProjectSession {
+  session_id: string
+  page_title_display: string
+  page_ids: string[]
+  current_stage: string
+  score: { total: number; breakdown: any[] }
+  created_at: string
+  updated_at: string
 }
 
 export interface AnalysisSession {
@@ -80,7 +100,8 @@ export interface AnalysisSession {
   pages: ConfluencePage[]
   figmaUrl?: string
   analysis?: AnalysisResult
-  testCases?: TestCase[]
-  currentStage: 'selection' | 'analysis' | 'review1' | 'generation' | 'review2' | 'export'
+  manualTestCases?: ManualTestCase[]
+  bddTestCases?: BDDTestCase[]
+  currentStage: 'selection' | 'analysis' | 'review1' | 'generation' | 'review2' | 'bdd_generation' | 'review3' | 'export'
   createdAt: string
 }
