@@ -5,7 +5,7 @@ import { useSessionStore } from '@/stores/session.store'
 const POLL_INTERVAL = 2000
 
 export function useSessionPolling(sessionId: string | null) {
-  const { setStage, setLoading, setError } = useSessionStore()
+  const { setStage, setLoading, setError, setAnalysisResult } = useSessionStore()
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
@@ -19,6 +19,20 @@ export function useSessionPolling(sessionId: string | null) {
         const stage = (session as any).current_stage
 
         if (stage === 'human_review_1') {
+          // Save gaps into store
+          const gaps = (session as any).gaps ?? []
+          const score = (session as any).score ?? { total: 0, factors: [] }
+          setAnalysisResult({
+            id: sessionId,
+            pageId: '',
+            pageTitle: '',
+            businessLogicSummary: (session as any).summary ?? '',
+            gaps,
+            score: { total: score.total, factors: score.breakdown ?? [] },
+            status: 'in_review',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          })
           setStage('review1')
           setLoading(false)
           if (intervalRef.current) clearInterval(intervalRef.current)

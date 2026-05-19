@@ -4,9 +4,11 @@ import type { AnalysisSession, ConfluencePage, AnalysisResult, TestCase } from '
 
 interface SessionStore {
   session: AnalysisSession | null
+  backendSessionId: string | null
   isLoading: boolean
   error: string | null
   initSession: (pages: ConfluencePage[], figmaUrl?: string) => void
+  setBackendSessionId: (id: string) => void
   setAnalysisResult: (result: AnalysisResult) => void
   setTestCases: (cases: TestCase[]) => void
   setStage: (stage: AnalysisSession['currentStage']) => void
@@ -18,6 +20,7 @@ interface SessionStore {
 export const useSessionStore = create<SessionStore>()(
   devtools((set) => ({
     session: null,
+    backendSessionId: null,
     isLoading: false,
     error: null,
 
@@ -32,6 +35,8 @@ export const useSessionStore = create<SessionStore>()(
         },
       }),
 
+    setBackendSessionId: (id) => set({ backendSessionId: id }),
+
     setAnalysisResult: (result) =>
       set((s) => ({ session: s.session ? { ...s.session, analysis: result } : null })),
 
@@ -43,6 +48,6 @@ export const useSessionStore = create<SessionStore>()(
 
     setLoading: (isLoading) => set({ isLoading }),
     setError: (error) => set({ error }),
-    reset: () => set({ session: null, isLoading: false, error: null }),
+    reset: () => set({ session: null, backendSessionId: null, isLoading: false, error: null }),
   }))
 )

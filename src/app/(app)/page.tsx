@@ -1,4 +1,6 @@
 'use client'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 import { useState } from 'react'
 import { Search, FileText, ArrowRight, Loader2 } from 'lucide-react'
 import { confluenceApi } from '@/lib/api/confluence'
@@ -14,8 +16,16 @@ export default function DashboardPage() {
   const [searching, setSearching] = useState(false)
   const [starting, setStarting] = useState(false)
   const [sessionId, setSessionId] = useState<string | null>(null)
-  const { initSession, setStage } = useSessionStore()
+  const { initSession, setStage, setBackendSessionId } = useSessionStore()
   useSessionPolling(sessionId)
+  const { session } = useSessionStore()
+const router = useRouter()
+
+useEffect(() => {
+  if (session?.currentStage === 'review1') {
+    router.push('/analysis')
+  }
+}, [session?.currentStage])
 
   const handleSearch = async () => {
     if (!query.trim()) return
@@ -34,6 +44,7 @@ export default function DashboardPage() {
       initSession([selected])
       const { session_id } = await analysisApi.start({ page_ids: [selected.id], page_title: selected.title })
       setSessionId(session_id)
+      setBackendSessionId(session_id)
       setStage('analysis')
     } catch (e) { console.error(e) }
     finally { setStarting(false) }
