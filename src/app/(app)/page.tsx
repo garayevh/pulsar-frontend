@@ -45,7 +45,7 @@ useEffect(() => {
       const { session_id } = await analysisApi.start({ page_ids: [selected.id], page_title: selected.title })
       setSessionId(session_id)
       setBackendSessionId(session_id)
-      setStage('analysis')
+      setStage('selection')
     } catch (e) { console.error(e) }
     finally { setStarting(false) }
   }
@@ -108,3 +108,4 @@ useEffect(() => {
     </div>
   )
 }
+

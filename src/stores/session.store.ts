@@ -34,7 +34,7 @@ export const useSessionStore = create<SessionStore>()(
         session: {
           id: crypto.randomUUID(),
           pages,
-          currentStage: 'analysis',
+          currentStage: 'selection',
           createdAt: new Date().toISOString(),
         },
         resumedGapReviews: {},
@@ -89,3 +89,4 @@ export const useSessionStore = create<SessionStore>()(
       }),
   }))
 )
+

@@ -102,6 +102,7 @@ export interface AnalysisSession {
   analysis?: AnalysisResult
   manualTestCases?: ManualTestCase[]
   bddTestCases?: BDDTestCase[]
-  currentStage: 'selection' | 'analysis' | 'review1' | 'generation' | 'review2' | 'bdd_generation' | 'review3' | 'export'
+  currentStage: 'selection' | 'review1' | 'generation' | 'review2' | 'bdd_generation' | 'review3' | 'export'
   createdAt: string
 }
+
