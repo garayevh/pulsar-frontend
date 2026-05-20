@@ -50,4 +50,10 @@ export const analysisApi = {
 
   deleteSession: (sessionId: string) =>
     api.delete<any>(`/sessions/${sessionId}`),
+
+  updatePrompts: (session_id: string, prompts: { tc_prompt?: string; bdd_prompt?: string; analysis_prompt?: string }) =>
+    api.post<any>('/session/prompts', { session_id, ...prompts }),
+
+  updatePrompts: (session_id: string, prompts: { tc_prompt?: string; bdd_prompt?: string; analysis_prompt?: string }) =>
+  api.post<any>('/session/prompts', { session_id, ...prompts }),
 }

@@ -1,4 +1,4 @@
-import { clsx, type ClassValue } from 'clsx'
+﻿import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { SCORE_THRESHOLDS } from '@/lib/constants'
 
@@ -20,5 +20,5 @@ export function formatDate(iso: string): string {
 }
 
 export function truncate(str: string, max: number): string {
-  return str.length > max ? str.slice(0, max) + '…' : str
+  return str.length > max ? str.slice(0, max) + '...' : str
 }

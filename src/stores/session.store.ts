@@ -1,6 +1,12 @@
-import { create } from 'zustand'
+﻿import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import type { AnalysisSession, ConfluencePage, AnalysisResult, ManualTestCase, BDDTestCase } from '@/types'
+
+export interface SessionPrompts {
+  analysis: string
+  tc: string
+  bdd: string
+}
 
 interface SessionStore {
   session: AnalysisSession | null
@@ -8,6 +14,7 @@ interface SessionStore {
   isLoading: boolean
   error: string | null
   resumedGapReviews: Record<string, { action: string; comment: string }>
+  prompts: SessionPrompts
   initSession: (pages: ConfluencePage[]) => void
   setBackendSessionId: (id: string) => void
   setAnalysisResult: (result: AnalysisResult) => void
@@ -17,9 +24,12 @@ interface SessionStore {
   setLoading: (v: boolean) => void
   setError: (e: string | null) => void
   setResumedGapReviews: (reviews: Record<string, any>) => void
+  setPrompt: (key: keyof SessionPrompts, value: string) => void
   resumeSession: (sessionId: string, stage: AnalysisSession['currentStage']) => void
   reset: () => void
 }
+
+const DEFAULT_PROMPTS: SessionPrompts = { analysis: '', tc: '', bdd: '' }
 
 export const useSessionStore = create<SessionStore>()(
   devtools((set) => ({
@@ -28,6 +38,7 @@ export const useSessionStore = create<SessionStore>()(
     isLoading: false,
     error: null,
     resumedGapReviews: {},
+    prompts: { ...DEFAULT_PROMPTS },
 
     initSession: (pages) =>
       set({
@@ -67,6 +78,9 @@ export const useSessionStore = create<SessionStore>()(
 
     setResumedGapReviews: (resumedGapReviews) => set({ resumedGapReviews }),
 
+    setPrompt: (key, value) =>
+      set((s) => ({ prompts: { ...s.prompts, [key]: value } })),
+
     resumeSession: (sessionId, stage) =>
       set({
         backendSessionId: sessionId,
@@ -86,7 +100,7 @@ export const useSessionStore = create<SessionStore>()(
         isLoading: false,
         error: null,
         resumedGapReviews: {},
+        prompts: { ...DEFAULT_PROMPTS },
       }),
   }))
 )
-
