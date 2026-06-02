@@ -6,6 +6,7 @@ export interface StartAnalysisRequest {
   analysis_prompt?: string
   tc_prompt?: string
   bdd_prompt?: string
+  figma_frames?: { id: string; name: string; type: string; page?: string }[]
 }
 
 export interface SessionState {
@@ -54,6 +55,4 @@ export const analysisApi = {
   updatePrompts: (session_id: string, prompts: { tc_prompt?: string; bdd_prompt?: string; analysis_prompt?: string }) =>
     api.post<any>('/session/prompts', { session_id, ...prompts }),
 
-  updatePrompts: (session_id: string, prompts: { tc_prompt?: string; bdd_prompt?: string; analysis_prompt?: string }) =>
-  api.post<any>('/session/prompts', { session_id, ...prompts }),
 }

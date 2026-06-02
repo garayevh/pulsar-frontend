@@ -1,12 +1,13 @@
 ﻿'use client'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { Search, FileText, ArrowRight, Loader2, CheckSquare, Square } from 'lucide-react'
+import { Search, FileText, ArrowRight, Loader2, CheckSquare, Square, Figma, X, CheckCircle2 } from 'lucide-react'
 import { confluenceApi } from '@/lib/api/confluence'
 import { analysisApi } from '@/lib/api/analysis'
 import { useSessionStore } from '@/stores/session.store'
 import { useSessionPolling } from '@/hooks/useSessionPolling'
 import { PromptEditor } from '@/components/ui/PromptEditor'
+import { figmaApi, type FigmaFrame } from '@/lib/api/figma'
 import type { ConfluencePage } from '@/types'
 
 const DEFAULT_ANALYSIS_PROMPT = `You are a senior QA analyst. Analyze the following requirements from Confluence.
@@ -52,6 +53,13 @@ export default function DashboardPage() {
   const [starting, setStarting] = useState(false)
   const [progress, setProgress] = useState(0)
   const [sessionId, setSessionId] = useState<string | null>(null)
+
+  // Figma state
+  const [figmaUrl, setFigmaUrl] = useState('')
+  const [figmaFrames, setFigmaFrames] = useState<FigmaFrame[]>([])
+  const [figmaLoading, setFigmaLoading] = useState(false)
+  const [figmaError, setFigmaError] = useState<string | null>(null)
+
   const { initSession, setStage, setBackendSessionId, prompts, setPrompt } = useSessionStore()
   useSessionPolling(sessionId)
   const { session } = useSessionStore()
@@ -96,6 +104,20 @@ export default function DashboardPage() {
 
   const isSelected = (page: ConfluencePage) => selected.some((p) => p.id === page.id)
 
+  const handleFigmaFetch = async () => {
+    if (!figmaUrl.trim()) return
+    setFigmaLoading(true)
+    setFigmaError(null)
+    try {
+      const frames = await figmaApi.getFrames(figmaUrl)
+      setFigmaFrames(frames)
+    } catch (e: any) {
+      setFigmaError(e?.message ?? 'Failed to fetch Figma frames')
+    } finally {
+      setFigmaLoading(false)
+    }
+  }
+
   const handleStart = async () => {
     if (selected.length === 0) return
     setStarting(true)
@@ -106,6 +128,7 @@ export default function DashboardPage() {
         analysis_prompt: prompts.analysis || undefined,
         tc_prompt: prompts.tc || undefined,
         bdd_prompt: prompts.bdd || undefined,
+        figma_frames: figmaFrames.length > 0 ? figmaFrames : undefined,
       })
       setProgress(100)
       setSessionId(session_id)
@@ -196,6 +219,70 @@ export default function DashboardPage() {
               </div>
             </div>
           )}
+
+          {/* Figma Context (always visible) */}
+          <div className="mt-6 rounded-xl border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-700 p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Figma size={16} className="text-surface-500 dark:text-surface-400" />
+              <span className="text-sm font-medium text-surface-700 dark:text-surface-200">Figma Context</span>
+              <span className="text-xs text-surface-400 dark:text-surface-500 ml-1">(optional)</span>
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={figmaUrl}
+                onChange={(e) => {
+                  setFigmaUrl(e.target.value)
+                  setFigmaFrames([])
+                  setFigmaError(null)
+                }}
+                onKeyDown={(e) => e.key === 'Enter' && handleFigmaFetch()}
+                placeholder="https://www.figma.com/design/..."
+                className="flex-1 rounded-lg border border-surface-200 dark:border-surface-500 bg-surface-50 dark:bg-surface-600 px-4 py-2.5 text-sm text-surface-900 dark:text-white outline-none focus:border-brand-500 placeholder:text-surface-400"
+              />
+              <button
+                onClick={handleFigmaFetch}
+                disabled={figmaLoading || !figmaUrl.trim()}
+                className="flex items-center gap-2 rounded-lg bg-surface-100 dark:bg-surface-600 px-4 py-2.5 text-sm font-medium text-surface-700 dark:text-surface-200 hover:bg-surface-200 dark:hover:bg-surface-500 disabled:opacity-50 transition-colors"
+              >
+                {figmaLoading ? <Loader2 size={16} className="animate-spin" /> : 'Fetch Frames'}
+              </button>
+            </div>
+
+            {figmaError && (
+              <p className="mt-2 text-xs text-red-500">{figmaError}</p>
+            )}
+
+            {figmaFrames.length > 0 && (
+              <div className="mt-3">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <CheckCircle2 size={14} className="text-green-500" />
+                  <span className="text-xs text-surface-500 dark:text-surface-400">
+                    {figmaFrames.length} frames loaded — will be passed to AI as context
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto">
+                  {figmaFrames.map((f) => (
+                    <span
+                      key={f.id}
+                      className="inline-flex items-center gap-1 rounded-md bg-surface-50 dark:bg-surface-600 border border-surface-200 dark:border-surface-500 px-2 py-0.5 text-xs text-surface-600 dark:text-surface-300"
+                    >
+                      {f.page && (
+                        <span className="text-surface-400 dark:text-surface-500">{f.page} /</span>
+                      )}
+                      {f.name}
+                      <button
+                        onClick={() => setFigmaFrames((prev) => prev.filter((x) => x.id !== f.id))}
+                        className="ml-0.5 text-surface-400 hover:text-surface-600 dark:hover:text-surface-200"
+                      >
+                        <X size={10} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Selected + Start */}
           {selected.length > 0 && (
